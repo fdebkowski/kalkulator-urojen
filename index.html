@@ -439,16 +439,16 @@
   <details class="method">
     <summary>Metodologia i źródła danych</summary>
     <div class="body" id="methodBody">
-      <p>Wynik to iloczyn prawdopodobieństw poszczególnych kryteriów — zakładamy ich wzajemną niezależność (uproszczenie; w rzeczywistości np. wzrost i zarobki czy wiek i stan cywilny są skorelowane, więc realny odsetek bywa nieco wyższy). Populacją odniesienia są wszyscy dorośli (18+) wybranej płci w Polsce.</p>
+      <p>Wynik to iloczyn prawdopodobieństw poszczególnych kryteriów — zakładamy ich wzajemną niezależność (uproszczenie; w rzeczywistości np. wzrost i zarobki czy wiek i stan cywilny są skorelowane, więc realny odsetek bywa nieco wyższy). Populacją odniesienia są wszyscy dorośli (18+) wybranej płci w Polsce. Rozkłady zarobków, wzrostu, wykształcenia, otyłości oraz prawa jazdy i samochodu zależą od wybranego przedziału wieku (ważone liczebnością populacji w danym wieku) — np. osoby 18–29 zarabiają wyraźnie mniej niż 30–39.</p>
       <h4>Założenia i ograniczenia</h4>
       <ul>
-        <li><b>Zarobki</b> — rozkład dotyczy osób <b>zatrudnionych najemnie</b> (GUS, gospodarka narodowa, X.2024, kwoty brutto). Nie obejmuje bezrobotnych, emerytów ani samozatrudnionych. Rozkłady dla płci przeskalowano wg median GUS (M 7029 zł / K 6700 zł).</li>
-        <li><b>Wzrost</b> — model rozkładu normalnego oparty na młodszych dorosłych kohortach (najwyższych); starsi mężczyźni są przeciętnie niżsi, więc dla wyższych przedziałów wieku odsetek bywa zawyżony.</li>
-        <li><b>Wykształcenie</b> — udziały z NSP 2021 liczone dla populacji 13+ (GUS nie publikuje czystego cięcia 18+); realne odsetki dla samych dorosłych są minimalnie wyższe.</li>
+        <li><b>Zarobki</b> — rozkład dotyczy osób <b>zatrudnionych najemnie</b> (GUS, gospodarka narodowa, X.2024, kwoty brutto). Nie obejmuje bezrobotnych, emerytów ani samozatrudnionych. Rozkłady dla płci przeskalowano wg median GUS (M 7029 zł / K 6700 zł). Mediana zależy też od wieku (GUS X.2024/X.2025): najniższa do 24 lat (~80% mediany), szczyt w grupie 35–44 (~104%), niższa po 55. r.ż.</li>
+        <li><b>Wzrost</b> — rozkład normalny ze średnią <b>zależną od wieku</b>: najmłodsze (najwyższe) kohorty jako poziom bazowy, starsze odpowiednio niższe (trend sekularny + obniżenie wzrostu z wiekiem; Łopuszańska-Dawid 2020, Wroński 2023, NCD-RisC). Odchylenie standardowe bez zmian.</li>
+        <li><b>Wykształcenie</b> — udziały wg wieku i płci z NSP 2021 (wyniki ostateczne, TABL. 15). Dla wybranego przedziału wieku liczone jako średnia ważona liczebnością populacji, więc np. młodsze kohorty mają znacznie wyższy odsetek wyższego wykształcenia. Najmłodszy przedział (18–19) przybliżono grupą 15–19, więc bywa zaniżony.</li>
         <li><b>Stan cywilny</b> — „w związku małżeńskim" to status prawny (NSP 2021); nie liczy nieformalnych związków, więc faktycznie wolnych jest nieco mniej, niż sugeruje filtr.</li>
-        <li><b>Otyłość</b> — BMI z deklarowanego wzrostu i wagi (GUS EHIS 2019), co zwykle zaniża rzeczywistą skalę otyłości.</li>
-        <li><b>Prawo jazdy</b> — <b>przybliżenie</b> udziału posiadaczy kat. B (CEPiK / GUS Transport); mężczyźni mają je częściej niż kobiety. Mniej precyzyjne niż dane demograficzne.</li>
-        <li><b>Samochód</b> — <b>zgrubne oszacowanie</b> indywidualnego dostępu do auta. Oficjalne dane dotyczą gospodarstw domowych, nie pojedynczych osób, więc to wartość orientacyjna.</li>
+        <li><b>Otyłość</b> — BMI z deklaracji, <b>wg wieku i płci</b> (ogólnopolskie badanie 2019/2020 + GUS EHIS 2019): rośnie z wiekiem, od ~6–9% u młodych do ~28–30% po 50. r.ż. Deklaracje zwykle zaniżają rzeczywistą skalę otyłości.</li>
+        <li><b>Prawo jazdy</b> — <b>przybliżenie</b> udziału posiadaczy kat. B <b>wg wieku i płci</b> (CBOS 2017 + CEPiK); mężczyźni mają je częściej, a u kobiet udział wyraźnie spada po 50. r.ż. Mniej precyzyjne niż dane demograficzne.</li>
+        <li><b>Samochód</b> — <b>zgrubne oszacowanie</b> indywidualnego dostępu do auta <b>wg wieku i płci</b> (kształt zbliżony do posiadania prawa jazdy). Oficjalne dane dotyczą gospodarstw domowych, nie pojedynczych osób, więc to wartość orientacyjna.</li>
         <li><b>Dzieci</b> — udział osób bezdzietnych wg wieku i płci (przybliżenie na bazie danych GUS o dzietności / NSP 2021). Bezdzietność szybko maleje z wiekiem i jest wyższa u mężczyzn.</li>
         <li><b>Rozwiedzeni</b> — udział o statusie prawnym „rozwiedziony/a" wg wieku i płci (NSP 2021). Nie obejmuje par po nieformalnym rozstaniu.</li>
       </ul>
@@ -553,7 +553,18 @@ const DATA = {
   // Wartości odpowiadają młodszym dorosłym kohortom (najwyższym).
   height: {
     men:   { mean: 178.7, sd: 7.0 },
-    women: { mean: 165.3, sd: 6.5 }
+    women: { mean: 165.3, sd: 6.5 },
+    // Korekta średniej (cm) względem najmłodszej (najwyższej) kohorty — trend sekularny + obniżenie
+    // wzrostu z wiekiem. Łopuszańska-Dawid 2020, Wroński 2023, NCD-RisC 2016. Wartości <= 0, SD bez zmian.
+    byBand: [
+      { lo: 18, hi: 24, dMen: 0.0,  dWomen: 0.0 },
+      { lo: 25, hi: 29, dMen: -0.2, dWomen: -0.2 },
+      { lo: 30, hi: 34, dMen: -0.4, dWomen: -0.4 },
+      { lo: 35, hi: 39, dMen: -0.8, dWomen: -0.9 },
+      { lo: 40, hi: 49, dMen: -1.6, dWomen: -1.9 },
+      { lo: 50, hi: 59, dMen: -3.0, dWomen: -3.8 },
+      { lo: 60, hi: 99, dMen: -6.0, dWomen: -8.0 }
+    ]
   },
   // Zarobki brutto miesięcznie (PLN) — punkty dystrybuanty (p = udział zarabiających <= x).
   // Stosujemy interpolację liniową; poza zakresem ekstrapolujemy do końców.
@@ -562,13 +573,45 @@ const DATA = {
   // Mężczyźni/kobiety przeskalowane wg ich median; dotyczy zatrudnionych najemnie (brutto).
   income: {
     men:   [ {x:0,p:0}, {x:3500,p:0.04}, {x:4408,p:0.10}, {x:4799,p:0.20}, {x:7029,p:0.50}, {x:10656,p:0.80}, {x:13708,p:0.90}, {x:20000,p:0.975}, {x:35000,p:0.998} ],
-    women: [ {x:0,p:0}, {x:3400,p:0.04}, {x:4202,p:0.10}, {x:4575,p:0.20}, {x:6700,p:0.50}, {x:10159,p:0.80}, {x:13067,p:0.90}, {x:19500,p:0.975}, {x:34000,p:0.998} ]
+    women: [ {x:0,p:0}, {x:3400,p:0.04}, {x:4202,p:0.10}, {x:4575,p:0.20}, {x:6700,p:0.50}, {x:10159,p:0.80}, {x:13067,p:0.90}, {x:19500,p:0.975}, {x:34000,p:0.998} ],
+    // Mediana zarobków wg wieku jako mnożnik mediany ogółem dla płci (1,00 = mediana danej płci).
+    // GUS „Rozkład wynagrodzeń w gospodarce narodowej" X.2024 i X.2025: mediana w grupie 35–44
+    // ≈ 104% ogółu, „24 lata i mniej" ≈ 80%, lekki spadek po 55. r.ż. Ten sam mnożnik dla obu płci.
+    byBand: [
+      { lo: 18, hi: 24, factor: 0.80 },
+      { lo: 25, hi: 29, factor: 0.89 },
+      { lo: 30, hi: 34, factor: 0.97 },
+      { lo: 35, hi: 39, factor: 1.03 },
+      { lo: 40, hi: 49, factor: 1.05 },
+      { lo: 50, hi: 59, factor: 0.99 },
+      { lo: 60, hi: 99, factor: 0.86 }
+    ]
   },
-  // Wykształcenie — udziały (sumują się do ~1). Kolejność malejąca poziomu.
-  // NSP 2021 (GUS), ludność 13+; udziały wg poziomu wykształcenia.
+  // Wykształcenie wg grup wieku i płci — udziały (każdy wiersz sumuje się do ~1).
+  // Źródło: NSP 2021 (GUS, wyniki ostateczne), TABL. 15 „Ludność w wieku 13 lat i więcej
+  // wg poziomu wykształcenia, płci i grup wieku". Mapowanie na 4 kategorie:
+  //   tertiary = wyższe; secondary = policealne + średnie (poziom maturalny); vocational =
+  //   zasadnicze zawodowe/branżowe; primaryOrLess = gimnazjalne + podstawowe + niżej.
+  //   Mianownik z pominięciem „nieustalony". Przelicza się średnią ważoną liczebnością
+  //   populacji w wybranym przedziale wieku. Przedział 18–19 przybliżono grupą 15–19
+  //   (GUS nie publikuje cięcia na 18), więc bywa zaniżony.
   education: {
-    men:   { tertiary: 0.19,  secondary: 0.312, vocational: 0.246, primaryOrLess: 0.252 },
-    women: { tertiary: 0.269, secondary: 0.334, vocational: 0.149, primaryOrLess: 0.248 }
+    byBand: [
+      { lo: 18, hi: 19, men: { tertiary: 0,      secondary: 0.1499, vocational: 0.036,  primaryOrLess: 0.8142 }, women: { tertiary: 0,      secondary: 0.2129, vocational: 0.0171, primaryOrLess: 0.77   } },
+      { lo: 20, hi: 24, men: { tertiary: 0.1144, secondary: 0.6271, vocational: 0.1496, primaryOrLess: 0.1089 }, women: { tertiary: 0.2254, secondary: 0.6468, vocational: 0.067,  primaryOrLess: 0.0609 } },
+      { lo: 25, hi: 29, men: { tertiary: 0.3134, secondary: 0.4345, vocational: 0.1609, primaryOrLess: 0.0912 }, women: { tertiary: 0.5369, secondary: 0.35,   vocational: 0.07,   primaryOrLess: 0.0431 } },
+      { lo: 30, hi: 34, men: { tertiary: 0.3565, secondary: 0.4014, vocational: 0.1496, primaryOrLess: 0.0925 }, women: { tertiary: 0.5603, secondary: 0.3132, vocational: 0.0784, primaryOrLess: 0.0481 } },
+      { lo: 35, hi: 39, men: { tertiary: 0.3446, secondary: 0.3855, vocational: 0.2036, primaryOrLess: 0.0664 }, women: { tertiary: 0.5334, secondary: 0.3086, vocational: 0.116,  primaryOrLess: 0.042  } },
+      { lo: 40, hi: 44, men: { tertiary: 0.3034, secondary: 0.3496, vocational: 0.2701, primaryOrLess: 0.0769 }, women: { tertiary: 0.461,  secondary: 0.331,  vocational: 0.1631, primaryOrLess: 0.0449 } },
+      { lo: 45, hi: 49, men: { tertiary: 0.2327, secondary: 0.3302, vocational: 0.3506, primaryOrLess: 0.0865 }, women: { tertiary: 0.3523, secondary: 0.3563, vocational: 0.2286, primaryOrLess: 0.0627 } },
+      { lo: 50, hi: 54, men: { tertiary: 0.1743, secondary: 0.3198, vocational: 0.4116, primaryOrLess: 0.0943 }, women: { tertiary: 0.2763, secondary: 0.3694, vocational: 0.2741, primaryOrLess: 0.0802 } },
+      { lo: 55, hi: 59, men: { tertiary: 0.1427, secondary: 0.322,  vocational: 0.4417, primaryOrLess: 0.0936 }, women: { tertiary: 0.2247, secondary: 0.4068, vocational: 0.2824, primaryOrLess: 0.0861 } },
+      { lo: 60, hi: 64, men: { tertiary: 0.1318, secondary: 0.3232, vocational: 0.4364, primaryOrLess: 0.1086 }, women: { tertiary: 0.172,  secondary: 0.4424, vocational: 0.2697, primaryOrLess: 0.1158 } },
+      { lo: 65, hi: 69, men: { tertiary: 0.137,  secondary: 0.314,  vocational: 0.4002, primaryOrLess: 0.1488 }, women: { tertiary: 0.1417, secondary: 0.4341, vocational: 0.2561, primaryOrLess: 0.1681 } },
+      { lo: 70, hi: 74, men: { tertiary: 0.1559, secondary: 0.3099, vocational: 0.358,  primaryOrLess: 0.1762 }, women: { tertiary: 0.1365, secondary: 0.3998, vocational: 0.2254, primaryOrLess: 0.2383 } },
+      { lo: 75, hi: 79, men: { tertiary: 0.1711, secondary: 0.2765, vocational: 0.295,  primaryOrLess: 0.2574 }, women: { tertiary: 0.1289, secondary: 0.3172, vocational: 0.1682, primaryOrLess: 0.3857 } },
+      { lo: 80, hi: 99, men: { tertiary: 0.1743, secondary: 0.2536, vocational: 0.2353, primaryOrLess: 0.3368 }, women: { tertiary: 0.0974, secondary: 0.2704, vocational: 0.1169, primaryOrLess: 0.5152 } }
+    ]
   },
   // Stan cywilny prawny — udział pozostających w związku MAŁŻEŃSKIM wg wieku. NSP 2021 (GUS).
   // (nie obejmuje nieformalnych związków/konkubinatów, więc realnie "zajętych" jest nieco więcej).
@@ -586,23 +629,44 @@ const DATA = {
       { lo: 60, hi: 99, menMarried: 0.70,  womenMarried: 0.50 }
     ]
   },
-  // Otyłość (BMI ≥ 30) — udział wśród dorosłych danej płci. GUS EHIS 2019 (BMI z deklaracji).
+  // Otyłość (BMI ≥ 30) wg wieku i płci. Traczyk i in. 2019/2020 (ogólnopolskie, n=3735) + GUS EHIS 2019.
+  // Rośnie z wiekiem; po 50. r.ż. starsze kobiety dorównują mężczyznom. Średnia ważona ≈ 20% M / 18% K.
   obesity: {
-    men:   { obese: 0.20 },
-    women: { obese: 0.18 }
+    byBand: [
+      { lo: 18, hi: 24, menObese: 0.075, womenObese: 0.054 },
+      { lo: 25, hi: 29, menObese: 0.090, womenObese: 0.062 },
+      { lo: 30, hi: 34, menObese: 0.108, womenObese: 0.078 },
+      { lo: 35, hi: 39, menObese: 0.126, womenObese: 0.090 },
+      { lo: 40, hi: 49, menObese: 0.167, womenObese: 0.116 },
+      { lo: 50, hi: 59, menObese: 0.281, womenObese: 0.250 },
+      { lo: 60, hi: 99, menObese: 0.301, womenObese: 0.280 }
+    ]
   },
-  // Prawo jazdy (kat. B) — udział posiadających wśród dorosłych danej płci.
-  // PRZYBLIŻENIE na podstawie CEPiK / GUS Transport (mężczyźni mają je częściej niż kobiety).
+  // Prawo jazdy (kat. B) wg wieku i płci. PRZYBLIŻENIE: CBOS 2017 (K_086_17) + CEPiK.
+  // U mężczyzn szczyt 40–49; u kobiet wyraźny spadek po 50. r.ż. Średnia ważona ≈ 80% M / 57% K.
   licence: {
-    men:   { has: 0.80 },
-    women: { has: 0.57 }
+    byBand: [
+      { lo: 18, hi: 24, menHas: 0.69, womenHas: 0.59 },
+      { lo: 25, hi: 29, menHas: 0.74, womenHas: 0.71 },
+      { lo: 30, hi: 34, menHas: 0.79, womenHas: 0.73 },
+      { lo: 35, hi: 39, menHas: 0.84, womenHas: 0.72 },
+      { lo: 40, hi: 49, menHas: 0.86, womenHas: 0.67 },
+      { lo: 50, hi: 59, menHas: 0.84, womenHas: 0.57 },
+      { lo: 60, hi: 99, menHas: 0.78, womenHas: 0.42 }
+    ]
   },
-  // Własny samochód / stały dostęp do auta — udział wśród dorosłych danej płci.
-  // ZGRUBNE PRZYBLIŻENIE (motoryzacja w PL należy do najwyższych w UE; dane są na poziomie
-  // gospodarstw domowych, nie osób, więc to oszacowanie indywidualne).
+  // Własny samochód / stały dostęp do auta wg wieku i płci. ZGRUBNE PRZYBLIŻENIE (kształt zbliżony
+  // do posiadania prawa jazdy; dane oficjalne dotyczą gospodarstw, nie osób). Średnia ważona ≈ 65% M / 48% K.
   car: {
-    men:   { has: 0.65 },
-    women: { has: 0.48 }
+    byBand: [
+      { lo: 18, hi: 24, menHas: 0.50, womenHas: 0.42 },
+      { lo: 25, hi: 29, menHas: 0.60, womenHas: 0.55 },
+      { lo: 30, hi: 34, menHas: 0.66, womenHas: 0.60 },
+      { lo: 35, hi: 39, menHas: 0.70, womenHas: 0.62 },
+      { lo: 40, hi: 49, menHas: 0.71, womenHas: 0.60 },
+      { lo: 50, hi: 59, menHas: 0.70, womenHas: 0.50 },
+      { lo: 60, hi: 99, menHas: 0.62, womenHas: 0.35 }
+    ]
   },
   // Bezdzietność — udział osób BEZ dzieci wg wieku i płci. PRZYBLIŻENIE na bazie danych GUS
   // o dzietności / NSP 2021 (wiek 1. dziecka u mężczyzn późniejszy → wyższa bezdzietność).
@@ -636,12 +700,14 @@ const DATA = {
   },
   sources: [
     { t: "GUS — Ludność. Stan i struktura ludności (roczniki wieku, stan 1.01.2024; seria po NSP 2021)", u: "https://stat.gov.pl/obszary-tematyczne/ludnosc/ludnosc/ludnosc-stan-i-struktura-ludnosci-oraz-ruch-naturalny-w-przekroju-terytorialnym-w-2024-r-stan-w-dniu-31-12,6,38.html" },
-    { t: "GUS — NSP 2021: ludność wg cech społecznych (wykształcenie, 13+)", u: "https://stat.gov.pl/spisy-powszechne/nsp-2021/nsp-2021-wyniki-wstepne/ludnosc-wedlug-cech-spolecznych-wyniki-wstepne-nsp-2021,2,1.html" },
+    { t: "GUS — NSP 2021 (wyniki ostateczne): ludność 13+ wg poziomu wykształcenia, płci i grup wieku (TABL. 15)", u: "https://stat.gov.pl/spisy-powszechne/nsp-2021/nsp-2021-wyniki-ostateczne/stan-i-struktura-demograficzno-spoleczna-i-ekonomiczna-ludnosci-polski-w-swietle-wynikow-nsp-2021,6,2.html" },
     { t: "GUS — NSP 2021: ludność wg stanu cywilnego, wieku i płci", u: "https://stat.gov.pl/spisy-powszechne/nsp-2021/nsp-2021-wyniki-ostateczne/stan-i-struktura-demograficzno-spoleczna-i-ekonomiczna-ludnosci-polski-w-swietle-wynikow-nsp-2021,6,2.html" },
     { t: "GUS — Rozkład wynagrodzeń w gospodarce narodowej w październiku 2024 r. (brutto)", u: "https://stat.gov.pl/obszary-tematyczne/rynek-pracy/pracujacy-zatrudnieni-wynagrodzenia-koszty-pracy/rozklad-wynagrodzen-w-gospodarce-narodowej-w-pazdzierniku-2024-r-,32,10.html" },
     { t: "GUS — Stan zdrowia ludności Polski w 2019 r. (EHIS; BMI, otyłość)", u: "https://stat.gov.pl/obszary-tematyczne/zdrowie/zdrowie/stan-zdrowia-ludnosci-polski-w-2019-r-,26,1.html" },
     { t: "Wzrost: P. Wroński (2023), World Inequality Lab + polskie badania pomiarowe (Kołodziej 2015, Łopuszańska-Dawid 2020)", u: "https://wid.world/" },
-    { t: "Prawo jazdy / samochód: CEPiK + GUS — Transport. Wyniki działalności (szacunek udziału posiadaczy)", u: "https://www.gov.pl/web/cepik" }
+    { t: "Prawo jazdy / samochód: CEPiK + GUS — Transport. Wyniki działalności (szacunek udziału posiadaczy)", u: "https://www.gov.pl/web/cepik" },
+    { t: "Otyłość wg wieku i płci: Traczyk i in. — ogólnopolskie badanie BMI 2019/2020 (PMC8834843)", u: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8834843/" },
+    { t: "Prawo jazdy wg wieku i płci: CBOS 2017 „Styl jazdy polskich kierowców” (komunikat K_086_17)", u: "https://www.cbos.pl/SPISKOM.POL/2017/K_086_17.PDF" }
   ]
 };
 
@@ -687,32 +753,67 @@ function pAge(sex, aMin, aMax) {
   return full > 0 ? sel / full : 0;
 }
 
-function pHeightAtLeast(sex, cm) {
-  const h = DATA.height[sex];
-  const z = (cm - h.mean) / h.sd;
-  return 1 - normCdf(z);
+// średnia ważona liczebnością populacji w wybranym przedziale wieku, po pasmach tabeli `byBand`
+// (ten sam wzorzec wagowy co pEducation/pNotMarried: waga = liczba osób danej płci w nakładającym się wieku)
+function ageWeighted(sex, aMin, aMax, byBand, valueFn) {
+  const popKey = sex === 'men' ? 'men' : 'women';
+  let acc = 0, totalPop = 0;
+  for (const b of byBand) {
+    const ov = Math.min(aMax, b.hi) - Math.max(aMin, b.lo) + 1;
+    if (ov <= 0) continue;
+    const w = popInRange(DATA.age.bands, Math.max(aMin, b.lo), Math.min(aMax, b.hi), popKey);
+    acc += w * valueFn(b);
+    totalPop += w;
+  }
+  return totalPop > 0 ? acc / totalPop : valueFn(byBand[byBand.length - 1]);
 }
 
-function pIncomeAtLeast(sex, pln) {
-  const pts = DATA.income[sex] || DATA.income.men;
-  // interpolacja liniowa dystrybuanty
+// odsetek osób o wzroście >= cm; średnia danej płci zależy od wieku (trend sekularny + obniżenie z wiekiem)
+function pHeightAtLeast(sex, cm, aMin, aMax) {
+  const h = DATA.height[sex];
+  const dKey = sex === 'men' ? 'dMen' : 'dWomen';
+  return ageWeighted(sex, aMin, aMax, DATA.height.byBand, (b) => {
+    const z = (cm - (h.mean + b[dKey])) / h.sd;
+    return 1 - normCdf(z);
+  });
+}
+
+// odsetek zarabiających >= pln (interpolacja liniowa dystrybuanty)
+function cdfExceed(pts, pln) {
   if (pln <= pts[0].x) return 1 - pts[0].p;
   for (let i = 1; i < pts.length; i++) {
     if (pln <= pts[i].x) {
       const a = pts[i - 1], b = pts[i];
       const frac = (pln - a.x) / (b.x - a.x);
-      const cum = a.p + frac * (b.p - a.p);
-      return 1 - cum;
+      return 1 - (a.p + frac * (b.p - a.p));
     }
   }
   return 1 - pts[pts.length - 1].p;
 }
 
-function pEducation(sex, level) {
-  const e = DATA.education[sex];
+// dystrybuanta zarobków zależna od wieku: medianę pasma skaluje `factor`, więc P(>=pln) liczymy
+// z bazowej dystrybuanty w punkcie pln/factor, a wyniki uśredniamy wagą populacji w przedziale wieku
+function pIncomeAtLeast(sex, pln, aMin, aMax) {
+  const pts = DATA.income[sex] || DATA.income.men;
+  return ageWeighted(sex, aMin, aMax, DATA.income.byBand, (b) => cdfExceed(pts, pln / b.factor));
+}
+
+// udziały wg wykształcenia ważone liczebnością populacji w wybranym przedziale wieku
+function pEducation(sex, level, aMin, aMax) {
   if (level === 'any') return 1;
-  if (level === 'secondary') return e.tertiary + e.secondary;
-  if (level === 'tertiary') return e.tertiary;
+  const popKey = sex === 'men' ? 'men' : 'women';
+  let tert = 0, sec = 0, totalPop = 0;
+  for (const b of DATA.education.byBand) {
+    const ov = Math.min(aMax, b.hi) - Math.max(aMin, b.lo) + 1;
+    if (ov <= 0) continue;
+    const w = popInRange(DATA.age.bands, Math.max(aMin, b.lo), Math.min(aMax, b.hi), popKey);
+    tert += w * b[sex].tertiary;
+    sec  += w * b[sex].secondary;
+    totalPop += w;
+  }
+  if (totalPop <= 0) return 1;
+  if (level === 'tertiary')  return tert / totalPop;
+  if (level === 'secondary') return (tert + sec) / totalPop;
   return 1;
 }
 
@@ -732,16 +833,19 @@ function pNotMarried(sex, aMin, aMax) {
   return 1 - marriedRate;
 }
 
-function pNotObese(sex) {
-  return 1 - DATA.obesity[sex].obese;
+function pNotObese(sex, aMin, aMax) {
+  const key = sex === 'men' ? 'menObese' : 'womenObese';
+  return 1 - ageWeighted(sex, aMin, aMax, DATA.obesity.byBand, (b) => b[key]);
 }
 
-function pHasLicence(sex) {
-  return DATA.licence[sex].has;
+function pHasLicence(sex, aMin, aMax) {
+  const key = sex === 'men' ? 'menHas' : 'womenHas';
+  return ageWeighted(sex, aMin, aMax, DATA.licence.byBand, (b) => b[key]);
 }
 
-function pHasCar(sex) {
-  return DATA.car[sex].has;
+function pHasCar(sex, aMin, aMax) {
+  const key = sex === 'men' ? 'menHas' : 'womenHas';
+  return ageWeighted(sex, aMin, aMax, DATA.car.byBand, (b) => b[key]);
 }
 
 // odsetek bezdzietnych w wybranym przedziale wieku (ważony liczebnością populacji)
@@ -889,18 +993,18 @@ function compute() {
   const pa = pAge(s, state.ageMin, state.ageMax);
   parts.push({ key: 'age', label: `Wiek ${state.ageMin}–${state.ageMax} lat`, p: pa });
 
-  const ph = pHeightAtLeast(s, state.height);
+  const ph = pHeightAtLeast(s, state.height, state.ageMin, state.ageMax);
   parts.push({ key: 'height', label: `Wzrost ≥ ${state.height} cm`, p: ph });
 
   let pi = 1;
   if (state.income > 0) {
-    pi = pIncomeAtLeast(s, state.income);
+    pi = pIncomeAtLeast(s, state.income, state.ageMin, state.ageMax);
     parts.push({ key: 'income', label: `Zarobki ≥ ${fmtIncome(state.income)} brutto`, p: pi });
   }
 
   let pe = 1;
   if (state.edu !== 'any') {
-    pe = pEducation(s, state.edu);
+    pe = pEducation(s, state.edu, state.ageMin, state.ageMax);
     const lbl = state.edu === 'tertiary' ? 'Wykształcenie wyższe' : 'Wykształcenie min. średnie';
     parts.push({ key: 'edu', label: lbl, p: pe });
   }
@@ -913,19 +1017,19 @@ function compute() {
 
   let po = 1;
   if (state.excludeObese) {
-    po = pNotObese(s);
+    po = pNotObese(s, state.ageMin, state.ageMax);
     parts.push({ key: 'obese', label: 'Bez otyłości', p: po });
   }
 
   let pl = 1;
   if (state.requireLicence) {
-    pl = pHasLicence(s);
+    pl = pHasLicence(s, state.ageMin, state.ageMax);
     parts.push({ key: 'licence', label: 'Ma prawo jazdy', p: pl });
   }
 
   let pc = 1;
   if (state.requireCar) {
-    pc = pHasCar(s);
+    pc = pHasCar(s, state.ageMin, state.ageMax);
     parts.push({ key: 'car', label: 'Ma samochód', p: pc });
   }
 
