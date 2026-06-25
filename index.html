@@ -225,6 +225,26 @@
     background: var(--accent);
   }
 
+  /* ---- check button ---- */
+  .check-btn {
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    margin: 26px auto 4px;
+    border: 0;
+    background: var(--accent);
+    color: var(--bubble-text);
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px 24px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: filter .15s, transform .05s;
+  }
+  .check-btn:hover { filter: brightness(1.05); }
+  .check-btn:active { transform: scale(0.99); }
+
   /* ---- result ---- */
   .result {
     background: var(--card);
@@ -423,8 +443,11 @@
     </label>
   </section>
 
+  <!-- PRZYCISK -->
+  <button class="check-btn" id="checkBtn">Sprawdź swój poziom delulu</button>
+
   <!-- WYNIK -->
-  <section class="result" id="result">
+  <section class="result" id="result" style="display:none">
     <div class="pct" id="pct">—</div>
     <div class="oneIn" id="oneIn"></div>
     <div><span class="verdict" id="verdict"></span></div>
@@ -1000,15 +1023,15 @@ function render() {
    ============================================================ */
 const ageS = makeSlider(document.getElementById('ageSlider'), {
   values: [state.ageMin, state.ageMax], fmt: fmtAge,
-  onChange: (v) => { state.ageMin = v[0]; state.ageMax = v[1]; render(); }
+  onChange: (v) => { state.ageMin = v[0]; state.ageMax = v[1]; hideResult(); }
 });
 const heightS = makeSlider(document.getElementById('heightSlider'), {
   values: [state.height], fmt: fmtHeight,
-  onChange: (v) => { state.height = v[0]; render(); }
+  onChange: (v) => { state.height = v[0]; hideResult(); }
 });
 const incomeS = makeSlider(document.getElementById('incomeSlider'), {
   values: [state.income], fmt: fmtIncome,
-  onChange: (v) => { state.income = v[0]; render(); }
+  onChange: (v) => { state.income = v[0]; hideResult(); }
 });
 
 // checkboxy
@@ -1017,7 +1040,7 @@ function bindCheck(id, key) {
   el.addEventListener('click', () => {
     state[key] = !state[key];
     el.classList.toggle('on', state[key]);
-    render();
+    hideResult();
   });
 }
 bindCheck('chkMarried', 'excludeMarried');
@@ -1033,7 +1056,7 @@ document.querySelectorAll('#eduRadios .radio').forEach(r => {
     document.querySelectorAll('#eduRadios .radio').forEach(x => x.classList.remove('on'));
     r.classList.add('on');
     state.edu = r.dataset.edu;
-    render();
+    hideResult();
   });
 });
 
@@ -1050,7 +1073,7 @@ document.querySelectorAll('#seg button').forEach(b => {
     // sensowny domyślny wzrost
     if (state.sex === 'women' && state.height === 180) { state.height = 170; heightS.set([170]); }
     if (state.sex === 'men' && state.height === 170) { state.height = 180; heightS.set([180]); }
-    render();
+    hideResult();
   });
 });
 
@@ -1060,7 +1083,15 @@ document.getElementById('sources').innerHTML =
   DATA.sources.map(s => `<li><a href="${s.u}" target="_blank" rel="noopener">${s.t}</a></li>`).join('') +
   '</ul>';
 
-render();
+// wynik pokazujemy dopiero po kliknięciu — zmiana dowolnego kryterium go chowa,
+// żeby nie wyświetlać nieaktualnego procentu
+const resultEl = document.getElementById('result');
+function hideResult() { resultEl.style.display = 'none'; }
+document.getElementById('checkBtn').addEventListener('click', () => {
+  render();
+  resultEl.style.display = 'block';
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 </script>
 </body>
 </html>
