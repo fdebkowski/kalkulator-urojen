@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>delulumetr 🇵🇱 — ile osób spełnia Twoje wymagania?</title>
+<meta name="description" content="delulumetr — polski miernik urojeń oparty na danych GUS. Sprawdź, jaki procent Polek i Polaków spełnia Twoje wymagania co do wieku, wzrostu, zarobków i wykształcenia.">
+<style>
+  :root {
+    --bg: #2b3543;
+    --card: #38444f;
+    --card-2: #3f4c58;
+    --accent: #8ed0e8;
+    --accent-track: #87cee8;
+    --bubble: #7ec8e3;
+    --bubble-text: #14202b;
+    --track: #c9ced4;
+    --text: #eef2f5;
+    --text-dim: #aab6c0;
+    --white: #ffffff;
+    --good: #5cc28f;
+    --ok: #e0c060;
+    --warn: #e08a4a;
+    --bad: #e0605f;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Open Sans", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  header.app-head {
+    text-align: center;
+    margin: 8px 0 26px;
+  }
+  header.app-head h1 {
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.3px;
+  }
+  header.app-head p {
+    margin: 0 auto;
+    max-width: 520px;
+    color: var(--text-dim);
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+
+  /* segmented gender toggle */
+  .seg {
+    display: inline-flex;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 5px;
+    margin: 18px auto 0;
+    gap: 4px;
+  }
+  .seg button {
+    border: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    font-family: inherit;
+  }
+  .seg button.active {
+    background: var(--accent);
+    color: var(--bubble-text);
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 22px 26px 26px;
+    margin: 18px 0;
+  }
+  .card h2 {
+    text-align: center;
+    font-weight: 600;
+    font-size: 27px;
+    margin: 6px 0 30px;
+    color: var(--text);
+  }
+
+  /* ---- sliders ---- */
+  .slider {
+    position: relative;
+    height: 26px;
+    margin: 44px 6px 8px;
+    touch-action: none;
+  }
+  .slider .rail {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 6px;
+    transform: translateY(-50%);
+    background: var(--track);
+    border-radius: 3px;
+  }
+  .slider .fill {
+    position: absolute;
+    top: 50%;
+    height: 6px;
+    transform: translateY(-50%);
+    background: var(--accent-track);
+    border-radius: 3px;
+  }
+  .slider .thumb {
+    position: absolute;
+    top: 50%;
+    width: 26px;
+    height: 26px;
+    background: var(--white);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 5px rgba(0,0,0,.35);
+    cursor: grab;
+    z-index: 3;
+  }
+  .slider .thumb:active { cursor: grabbing; }
+  .slider .bubble {
+    position: absolute;
+    top: -34px;
+    transform: translateX(-50%);
+    background: var(--bubble);
+    color: var(--bubble-text);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 7px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 4;
+  }
+  .slider .bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--bubble);
+  }
+
+  /* ---- checkbox ---- */
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 26px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 19px;
+  }
+  .check .box {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    background: #eef2f5;
+    flex: none;
+    position: relative;
+    transition: background .12s;
+  }
+  .check.on .box { background: var(--accent); }
+  .check.on .box::after {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 4px;
+    width: 6px;
+    height: 12px;
+    border: solid var(--bubble-text);
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+  }
+
+  /* ---- radio (education) ---- */
+  .radios { margin-top: 4px; }
+  .radio {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 2px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 20px;
+  }
+  .radio .dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--white);
+    flex: none;
+    position: relative;
+  }
+  .radio.on .dot {
+    background: var(--bg);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .radio.on .dot::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ---- result ---- */
+  .result {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px 26px 30px;
+    margin: 22px 0;
+    text-align: center;
+  }
+  .result .pct {
+    font-size: 60px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .result .oneIn {
+    margin-top: 10px;
+    font-size: 17px;
+    color: var(--text-dim);
+  }
+  .result .oneIn b { color: var(--text); }
+  .verdict {
+    display: inline-block;
+    margin-top: 18px;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 999px;
+  }
+
+  .grid100 {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    gap: 4px;
+    max-width: 360px;
+    margin: 24px auto 6px;
+  }
+  .grid100 .d {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #4b5763;
+  }
+  .grid100 .d.on { background: var(--accent); }
+  .grid-note { color: var(--text-dim); font-size: 13px; margin-top: 8px; }
+
+  .breakdown {
+    margin: 26px auto 0;
+    max-width: 440px;
+    text-align: left;
+  }
+  .breakdown h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+    text-align: center;
+  }
+  .brow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+    font-size: 14.5px;
+  }
+  .brow .lbl { flex: 1; color: var(--text); }
+  .brow .bar {
+    flex: none;
+    width: 120px;
+    height: 7px;
+    background: #4b5763;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .brow .bar > i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+  }
+  .brow .val {
+    flex: none;
+    width: 52px;
+    text-align: right;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  details.method {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 4px 22px;
+    margin: 20px 0 0;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  details.method summary {
+    cursor: pointer;
+    padding: 16px 0;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+  }
+  details.method summary::-webkit-details-marker { display: none; }
+  details.method summary::before { content: "▸ "; color: var(--accent); }
+  details.method[open] summary::before { content: "▾ "; }
+  details.method .body { padding-bottom: 18px; line-height: 1.6; }
+  details.method h4 { color: var(--text); margin: 16px 0 6px; font-size: 14px; }
+  details.method ul { margin: 6px 0; padding-left: 20px; }
+  details.method li { margin: 4px 0; }
+  details.method a { color: var(--accent); text-decoration: none; word-break: break-word; }
+  details.method a:hover { text-decoration: underline; }
+  details.method code { background: #2b3543; padding: 1px 5px; border-radius: 4px; }
+
+  footer.fine {
+    text-align: center;
+    color: #6f7d89;
+    font-size: 12px;
+    margin-top: 30px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 480px) {
+    header.app-head h1 { font-size: 24px; }
+    .card h2 { font-size: 23px; }
+    .result .pct { font-size: 46px; }
+    .card { padding: 18px 18px 22px; }
+    .result { padding: 22px 16px; }
+    .brow .bar { width: 80px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app-head">
+    <h1>delulumetr 🇵🇱</h1>
+    <p>Jaki procent dorosłych w Polsce naprawdę spełnia Twoje wymagania? Liczby pochodzą z danych GUS i Narodowego Spisu Powszechnego 2021.</p>
+    <div class="seg" id="seg">
+      <button data-sex="men" class="active">Szukam mężczyzny</button>
+      <button data-sex="women">Szukam kobiety</button>
+    </div>
+  </header>
+
+  <!-- WIEK -->
+  <section class="card">
+    <h2>Wiek</h2>
+    <div class="slider" id="ageSlider" data-min="18" data-max="80" data-step="1"></div>
+    <label class="check" id="chkMarried">
+      <span class="box"></span>
+      <span class="lbl" data-men="Wyklucz żonatych" data-women="Wyklucz zamężne">Wyklucz żonatych</span>
+    </label>
+  </section>
+
+  <!-- WYKSZTAŁCENIE -->
+  <section class="card">
+    <h2>Wykształcenie</h2>
+    <div class="radios" id="eduRadios">
+      <label class="radio on" data-edu="any"><span class="dot"></span><span>Dowolne</span></label>
+      <label class="radio" data-edu="secondary"><span class="dot"></span><span>Min. średnie</span></label>
+      <label class="radio" data-edu="tertiary"><span class="dot"></span><span>Wykształcenie wyższe</span></label>
+    </div>
+  </section>
+
+  <!-- WZROST -->
+  <section class="card">
+    <h2>Min. wzrost</h2>
+    <div class="slider" id="heightSlider" data-min="150" data-max="205" data-step="1"></div>
+    <label class="check" id="chkObese">
+      <span class="box"></span>
+      <span class="lbl">Wyklucz osoby otyłe</span>
+    </label>
+  </section>
+
+  <!-- ZAROBKI -->
+  <section class="card">
+    <h2>Min. zarobki <span style="font-size:14px;color:var(--text-dim);font-weight:400">(brutto / mies.)</span></h2>
+    <div class="slider" id="incomeSlider" data-min="0" data-max="25000" data-step="250"></div>
+  </section>
+
+  <!-- DODATKOWE WYMAGANIA -->
+  <section class="card">
+    <h2>Dodatkowe wymagania</h2>
+    <label class="check" id="chkLicence">
+      <span class="box"></span>
+      <span class="lbl">Musi mieć prawo jazdy</span>
+    </label>
+    <label class="check" id="chkCar">
+      <span class="box"></span>
+      <span class="lbl">Musi mieć samochód</span>
+    </label>
+    <label class="check" id="chkKids">
+      <span class="box"></span>
+      <span class="lbl">Wyklucz osoby z dziećmi</span>
+    </label>
+    <label class="check" id="chkDivorced">
+      <span class="box"></span>
+      <span class="lbl">Wyklucz rozwiedzionych</span>
+    </label>
+  </section>
+
+  <!-- WYNIK -->
+  <section class="result" id="result">
+    <div class="pct" id="pct">—</div>
+    <div class="oneIn" id="oneIn"></div>
+    <div><span class="verdict" id="verdict"></span></div>
+    <div class="grid100" id="grid"></div>
+    <div class="grid-note" id="gridNote"></div>
+    <div class="breakdown">
+      <h3>Co najbardziej zawęża wybór</h3>
+      <div id="breakdown"></div>
+    </div>
+  </section>
+
+  <details class="method">
+    <summary>Metodologia i źródła danych</summary>
+    <div class="body" id="methodBody">
+      <p>Wynik to iloczyn prawdopodobieństw poszczególnych kryteriów — zakładamy ich wzajemną niezależność (uproszczenie; w rzeczywistości np. wzrost i zarobki czy wiek i stan cywilny są skorelowane, więc realny odsetek bywa nieco wyższy). Populacją odniesienia są wszyscy dorośli (18+) wybranej płci w Polsce.</p>
+      <h4>Założenia i ograniczenia</h4>
+      <ul>
+        <li><b>Zarobki</b> — rozkład dotyczy osób <b>zatrudnionych najemnie</b> (GUS, gospodarka narodowa, X.2024, kwoty brutto). Nie obejmuje bezrobotnych, emerytów ani samozatrudnionych. Rozkłady dla płci przeskalowano wg median GUS (M 7029 zł / K 6700 zł).</li>
+        <li><b>Wzrost</b> — model rozkładu normalnego oparty na młodszych dorosłych kohortach (najwyższych); starsi mężczyźni są przeciętnie niżsi, więc dla wyższych przedziałów wieku odsetek bywa zawyżony.</li>
+        <li><b>Wykształcenie</b> — udziały z NSP 2021 liczone dla populacji 13+ (GUS nie publikuje czystego cięcia 18+); realne odsetki dla samych dorosłych są minimalnie wyższe.</li>
+        <li><b>Stan cywilny</b> — „w związku małżeńskim" to status prawny (NSP 2021); nie liczy nieformalnych związków, więc faktycznie wolnych jest nieco mniej, niż sugeruje filtr.</li>
+        <li><b>Otyłość</b> — BMI z deklarowanego wzrostu i wagi (GUS EHIS 2019), co zwykle zaniża rzeczywistą skalę otyłości.</li>
+        <li><b>Prawo jazdy</b> — <b>przybliżenie</b> udziału posiadaczy kat. B (CEPiK / GUS Transport); mężczyźni mają je częściej niż kobiety. Mniej precyzyjne niż dane demograficzne.</li>
+        <li><b>Samochód</b> — <b>zgrubne oszacowanie</b> indywidualnego dostępu do auta. Oficjalne dane dotyczą gospodarstw domowych, nie pojedynczych osób, więc to wartość orientacyjna.</li>
+        <li><b>Dzieci</b> — udział osób bezdzietnych wg wieku i płci (przybliżenie na bazie danych GUS o dzietności / NSP 2021). Bezdzietność szybko maleje z wiekiem i jest wyższa u mężczyzn.</li>
+        <li><b>Rozwiedzeni</b> — udział o statusie prawnym „rozwiedziony/a" wg wieku i płci (NSP 2021). Nie obejmuje par po nieformalnym rozstaniu.</li>
+      </ul>
+      <div id="sources"></div>
+      <p style="margin-top:16px;font-size:12.5px;color:#6f7d89">To narzędzie ma charakter rozrywkowo-edukacyjny. Pokazuje statystyki populacyjne, a nie ocenę konkretnych osób.</p>
+    </div>
+  </details>
+
+  <footer class="fine">
+    Polski klon „Female Delusion Calculator”. Dane: Główny Urząd Statystyczny (GUS) · Narodowy Spis Powszechny 2021.<br>
+    Liczby są przybliżeniem rozkładów populacyjnych, nie prognozą dla pojedynczej osoby.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DANE — wszystkie liczby z polskich źródeł (GUS / NSP 2021).
+   Zostaną podmienione na zweryfikowane wartości z badania.
+   ============================================================ */
+const DATA = {
+  // Liczebność populacji wg płci i pojedynczych roczników wieku (osoby).
+  // Źródło: GUS / Eurostat demo_pjan, stan na 1.01.2024 (seria po NSP 2021).
+  age: {
+    bands: [
+      { lo: 18, hi: 18, men: 177020, women: 168504 },
+      { lo: 19, hi: 19, men: 170714, women: 162404 },
+      { lo: 20, hi: 20, men: 168222, women: 161114 },
+      { lo: 21, hi: 21, men: 175023, women: 167510 },
+      { lo: 22, hi: 22, men: 181722, women: 174538 },
+      { lo: 23, hi: 23, men: 186733, women: 179169 },
+      { lo: 24, hi: 24, men: 187907, women: 180325 },
+      { lo: 25, hi: 25, men: 194066, women: 185163 },
+      { lo: 26, hi: 26, men: 201907, women: 193463 },
+      { lo: 27, hi: 27, men: 209726, women: 200058 },
+      { lo: 28, hi: 28, men: 214190, women: 205498 },
+      { lo: 29, hi: 29, men: 225971, women: 217165 },
+      { lo: 30, hi: 30, men: 235376, women: 224374 },
+      { lo: 31, hi: 31, men: 243526, women: 232786 },
+      { lo: 32, hi: 32, men: 258141, women: 245511 },
+      { lo: 33, hi: 33, men: 263419, women: 251442 },
+      { lo: 34, hi: 34, men: 264651, women: 252929 },
+      { lo: 35, hi: 35, men: 270899, women: 260529 },
+      { lo: 36, hi: 36, men: 275641, women: 263876 },
+      { lo: 37, hi: 37, men: 286813, women: 276229 },
+      { lo: 38, hi: 38, men: 303412, women: 292268 },
+      { lo: 39, hi: 39, men: 312628, women: 300803 },
+      { lo: 40, hi: 40, men: 320017, women: 309872 },
+      { lo: 41, hi: 41, men: 310435, women: 299683 },
+      { lo: 42, hi: 42, men: 296262, women: 288247 },
+      { lo: 43, hi: 43, men: 300904, women: 294652 },
+      { lo: 44, hi: 44, men: 300046, women: 292913 },
+      { lo: 45, hi: 45, men: 291072, women: 286841 },
+      { lo: 46, hi: 46, men: 288985, women: 284983 },
+      { lo: 47, hi: 47, men: 288906, women: 286957 },
+      { lo: 48, hi: 48, men: 278894, women: 277249 },
+      { lo: 49, hi: 49, men: 268299, women: 266949 },
+      { lo: 50, hi: 50, men: 256480, women: 256794 },
+      { lo: 51, hi: 51, men: 246297, women: 247207 },
+      { lo: 52, hi: 52, men: 234179, women: 237744 },
+      { lo: 53, hi: 53, men: 226339, women: 229660 },
+      { lo: 54, hi: 54, men: 216083, women: 221940 },
+      { lo: 55, hi: 55, men: 211088, women: 217218 },
+      { lo: 56, hi: 56, men: 207157, women: 214882 },
+      { lo: 57, hi: 57, men: 205868, women: 216149 },
+      { lo: 58, hi: 58, men: 206786, women: 218411 },
+      { lo: 59, hi: 59, men: 209066, women: 223123 },
+      { lo: 60, hi: 60, men: 210385, women: 228294 },
+      { lo: 61, hi: 61, men: 209530, women: 229887 },
+      { lo: 62, hi: 62, men: 213175, women: 238051 },
+      { lo: 63, hi: 63, men: 221131, women: 252085 },
+      { lo: 64, hi: 64, men: 231180, women: 267517 },
+      { lo: 65, hi: 65, men: 234537, women: 275653 },
+      { lo: 66, hi: 66, men: 232573, women: 279291 },
+      { lo: 67, hi: 67, men: 225675, women: 275317 },
+      { lo: 68, hi: 68, men: 221931, women: 276215 },
+      { lo: 69, hi: 69, men: 206952, women: 263837 },
+      { lo: 70, hi: 70, men: 199491, women: 260356 },
+      { lo: 71, hi: 71, men: 189648, women: 253084 },
+      { lo: 72, hi: 72, men: 179213, women: 247056 },
+      { lo: 73, hi: 73, men: 166408, women: 231603 },
+      { lo: 74, hi: 74, men: 152032, women: 218235 },
+      { lo: 75, hi: 75, men: 141986, women: 207331 },
+      { lo: 76, hi: 76, men: 125929, women: 190051 },
+      { lo: 77, hi: 77, men: 107941, women: 168896 },
+      { lo: 78, hi: 78, men: 73176,  women: 118374 },
+      { lo: 79, hi: 79, men: 67229,  women: 114169 },
+      { lo: 80, hi: 80, men: 61329,  women: 106956 },
+      { lo: 81, hi: 81, men: 55512,  women: 101233 },
+      { lo: 82, hi: 82, men: 54262,  women: 103610 },
+      { lo: 83, hi: 83, men: 51486,  women: 103370 },
+      { lo: 84, hi: 84, men: 46243,  women: 97944  },
+      { lo: 85, hi: 85, men: 41020,  women: 90649  },
+      { lo: 86, hi: 86, men: 36446,  women: 83845  },
+      { lo: 87, hi: 87, men: 31540,  women: 76728  },
+      { lo: 88, hi: 88, men: 26461,  women: 66827  },
+      { lo: 89, hi: 89, men: 21386,  women: 56333  },
+      { lo: 90, hi: 99, men: 70122,  women: 212178 }
+    ]
+  },
+  // Wzrost (cm): rozkład normalny mean/sd. Źródło: Wroński 2023 (World Inequality Lab) +
+  // pomiarowe badania polskie (Kołodziej 2015 — pobór 178,3 cm; Łopuszańska-Dawid 2020 — SD 6,9 cm).
+  // Wartości odpowiadają młodszym dorosłym kohortom (najwyższym).
+  height: {
+    men:   { mean: 178.7, sd: 7.0 },
+    women: { mean: 165.3, sd: 6.5 }
+  },
+  // Zarobki brutto miesięcznie (PLN) — punkty dystrybuanty (p = udział zarabiających <= x).
+  // Stosujemy interpolację liniową; poza zakresem ekstrapolujemy do końców.
+  // Punkty kotwiczone na GUS "Rozkład wynagrodzeń w gospodarce narodowej", X.2024
+  // (ogółem: P10 4300, P50 6857, mediana M 7029 / K 6700, P80 10396, P90 13372).
+  // Mężczyźni/kobiety przeskalowane wg ich median; dotyczy zatrudnionych najemnie (brutto).
+  income: {
+    men:   [ {x:0,p:0}, {x:3500,p:0.04}, {x:4408,p:0.10}, {x:4799,p:0.20}, {x:7029,p:0.50}, {x:10656,p:0.80}, {x:13708,p:0.90}, {x:20000,p:0.975}, {x:35000,p:0.998} ],
+    women: [ {x:0,p:0}, {x:3400,p:0.04}, {x:4202,p:0.10}, {x:4575,p:0.20}, {x:6700,p:0.50}, {x:10159,p:0.80}, {x:13067,p:0.90}, {x:19500,p:0.975}, {x:34000,p:0.998} ]
+  },
+  // Wykształcenie — udziały (sumują się do ~1). Kolejność malejąca poziomu.
+  // NSP 2021 (GUS), ludność 13+; udziały wg poziomu wykształcenia.
+  education: {
+    men:   { tertiary: 0.19,  secondary: 0.312, vocational: 0.246, primaryOrLess: 0.252 },
+    women: { tertiary: 0.269, secondary: 0.334, vocational: 0.149, primaryOrLess: 0.248 }
+  },
+  // Stan cywilny prawny — udział pozostających w związku MAŁŻEŃSKIM wg wieku. NSP 2021 (GUS).
+  // (nie obejmuje nieformalnych związków/konkubinatów, więc realnie "zajętych" jest nieco więcej).
+  marital: {
+    byBand: [
+      { lo: 18, hi: 19, menMarried: 0.005, womenMarried: 0.01 },
+      { lo: 20, hi: 24, menMarried: 0.071, womenMarried: 0.118 },
+      { lo: 25, hi: 29, menMarried: 0.30,  womenMarried: 0.441 },
+      { lo: 30, hi: 34, menMarried: 0.508, womenMarried: 0.625 },
+      { lo: 35, hi: 39, menMarried: 0.612, womenMarried: 0.683 },
+      { lo: 40, hi: 44, menMarried: 0.667, womenMarried: 0.705 },
+      { lo: 45, hi: 49, menMarried: 0.694, womenMarried: 0.715 },
+      { lo: 50, hi: 54, menMarried: 0.717, womenMarried: 0.726 },
+      { lo: 55, hi: 59, menMarried: 0.737, womenMarried: 0.716 },
+      { lo: 60, hi: 99, menMarried: 0.70,  womenMarried: 0.50 }
+    ]
+  },
+  // Otyłość (BMI ≥ 30) — udział wśród dorosłych danej płci. GUS EHIS 2019 (BMI z deklaracji).
+  obesity: {
+    men:   { obese: 0.20 },
+    women: { obese: 0.18 }
+  },
+  // Prawo jazdy (kat. B) — udział posiadających wśród dorosłych danej płci.
+  // PRZYBLIŻENIE na podstawie CEPiK / GUS Transport (mężczyźni mają je częściej niż kobiety).
+  licence: {
+    men:   { has: 0.80 },
+    women: { has: 0.57 }
+  },
+  // Własny samochód / stały dostęp do auta — udział wśród dorosłych danej płci.
+  // ZGRUBNE PRZYBLIŻENIE (motoryzacja w PL należy do najwyższych w UE; dane są na poziomie
+  // gospodarstw domowych, nie osób, więc to oszacowanie indywidualne).
+  car: {
+    men:   { has: 0.65 },
+    women: { has: 0.48 }
+  },
+  // Bezdzietność — udział osób BEZ dzieci wg wieku i płci. PRZYBLIŻENIE na bazie danych GUS
+  // o dzietności / NSP 2021 (wiek 1. dziecka u mężczyzn późniejszy → wyższa bezdzietność).
+  childless: {
+    byBand: [
+      { lo: 18, hi: 19, menChildless: 0.995, womenChildless: 0.97 },
+      { lo: 20, hi: 24, menChildless: 0.94,  womenChildless: 0.85 },
+      { lo: 25, hi: 29, menChildless: 0.75,  womenChildless: 0.58 },
+      { lo: 30, hi: 34, menChildless: 0.45,  womenChildless: 0.30 },
+      { lo: 35, hi: 39, menChildless: 0.28,  womenChildless: 0.20 },
+      { lo: 40, hi: 44, menChildless: 0.22,  womenChildless: 0.16 },
+      { lo: 45, hi: 49, menChildless: 0.20,  womenChildless: 0.15 },
+      { lo: 50, hi: 59, menChildless: 0.18,  womenChildless: 0.14 },
+      { lo: 60, hi: 99, menChildless: 0.15,  womenChildless: 0.12 }
+    ]
+  },
+  // Stan cywilny prawny — udział ROZWIEDZIONYCH wg wieku i płci. NSP 2021 (GUS), przybliżenie.
+  divorce: {
+    byBand: [
+      { lo: 18, hi: 19, menDivorced: 0.000, womenDivorced: 0.001 },
+      { lo: 20, hi: 24, menDivorced: 0.003, womenDivorced: 0.008 },
+      { lo: 25, hi: 29, menDivorced: 0.015, womenDivorced: 0.028 },
+      { lo: 30, hi: 34, menDivorced: 0.040, womenDivorced: 0.060 },
+      { lo: 35, hi: 39, menDivorced: 0.070, womenDivorced: 0.095 },
+      { lo: 40, hi: 44, menDivorced: 0.090, womenDivorced: 0.115 },
+      { lo: 45, hi: 49, menDivorced: 0.100, womenDivorced: 0.125 },
+      { lo: 50, hi: 54, menDivorced: 0.100, womenDivorced: 0.120 },
+      { lo: 55, hi: 59, menDivorced: 0.090, womenDivorced: 0.110 },
+      { lo: 60, hi: 99, menDivorced: 0.060, womenDivorced: 0.080 }
+    ]
+  },
+  sources: [
+    { t: "GUS — Ludność. Stan i struktura ludności (roczniki wieku, stan 1.01.2024; seria po NSP 2021)", u: "https://stat.gov.pl/obszary-tematyczne/ludnosc/ludnosc/ludnosc-stan-i-struktura-ludnosci-oraz-ruch-naturalny-w-przekroju-terytorialnym-w-2024-r-stan-w-dniu-31-12,6,38.html" },
+    { t: "GUS — NSP 2021: ludność wg cech społecznych (wykształcenie, 13+)", u: "https://stat.gov.pl/spisy-powszechne/nsp-2021/nsp-2021-wyniki-wstepne/ludnosc-wedlug-cech-spolecznych-wyniki-wstepne-nsp-2021,2,1.html" },
+    { t: "GUS — NSP 2021: ludność wg stanu cywilnego, wieku i płci", u: "https://stat.gov.pl/spisy-powszechne/nsp-2021/nsp-2021-wyniki-ostateczne/stan-i-struktura-demograficzno-spoleczna-i-ekonomiczna-ludnosci-polski-w-swietle-wynikow-nsp-2021,6,2.html" },
+    { t: "GUS — Rozkład wynagrodzeń w gospodarce narodowej w październiku 2024 r. (brutto)", u: "https://stat.gov.pl/obszary-tematyczne/rynek-pracy/pracujacy-zatrudnieni-wynagrodzenia-koszty-pracy/rozklad-wynagrodzen-w-gospodarce-narodowej-w-pazdzierniku-2024-r-,32,10.html" },
+    { t: "GUS — Stan zdrowia ludności Polski w 2019 r. (EHIS; BMI, otyłość)", u: "https://stat.gov.pl/obszary-tematyczne/zdrowie/zdrowie/stan-zdrowia-ludnosci-polski-w-2019-r-,26,1.html" },
+    { t: "Wzrost: P. Wroński (2023), World Inequality Lab + polskie badania pomiarowe (Kołodziej 2015, Łopuszańska-Dawid 2020)", u: "https://wid.world/" },
+    { t: "Prawo jazdy / samochód: CEPiK + GUS — Transport. Wyniki działalności (szacunek udziału posiadaczy)", u: "https://www.gov.pl/web/cepik" }
+  ]
+};
+
+/* ============================================================
+   SILNIK OBLICZENIOWY
+   ============================================================ */
+const fmtPct = (p) => {
+  const v = p * 100;
+  if (v >= 10) return v.toFixed(0).replace('.', ',') + '%';
+  if (v >= 1)  return v.toFixed(1).replace('.', ',') + '%';
+  if (v >= 0.1) return v.toFixed(2).replace('.', ',') + '%';
+  if (v > 0)   return '< 0,1%';
+  return '0%';
+};
+
+// dystrybuanta rozkładu normalnego standardowego
+function normCdf(z) {
+  // aproksymacja Abramowitz-Stegun
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  let p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return z > 0 ? 1 - p : p;
+}
+
+// nakładanie przedziału [a,b] na pasma populacyjne -> liczba osób danej płci
+function popInRange(bands, a, b, sexKey) {
+  let total = 0;
+  for (const band of bands) {
+    const lo = band.lo, hi = band.hi;        // przedział włącznie -> szerokość hi-lo+1 lat
+    const yrs = hi - lo + 1;
+    const perYear = band[sexKey] / yrs;
+    const ov = Math.min(b, hi) - Math.max(a, lo) + 1;
+    if (ov > 0) total += perYear * ov;
+  }
+  return total;
+}
+
+function pAge(sex, aMin, aMax) {
+  const bands = DATA.age.bands;
+  const key = sex === 'men' ? 'men' : 'women';
+  const full = popInRange(bands, 18, 200, key);
+  const sel = popInRange(bands, aMin, aMax, key);
+  return full > 0 ? sel / full : 0;
+}
+
+function pHeightAtLeast(sex, cm) {
+  const h = DATA.height[sex];
+  const z = (cm - h.mean) / h.sd;
+  return 1 - normCdf(z);
+}
+
+function pIncomeAtLeast(sex, pln) {
+  const pts = DATA.income[sex] || DATA.income.men;
+  // interpolacja liniowa dystrybuanty
+  if (pln <= pts[0].x) return 1 - pts[0].p;
+  for (let i = 1; i < pts.length; i++) {
+    if (pln <= pts[i].x) {
+      const a = pts[i - 1], b = pts[i];
+      const frac = (pln - a.x) / (b.x - a.x);
+      const cum = a.p + frac * (b.p - a.p);
+      return 1 - cum;
+    }
+  }
+  return 1 - pts[pts.length - 1].p;
+}
+
+function pEducation(sex, level) {
+  const e = DATA.education[sex];
+  if (level === 'any') return 1;
+  if (level === 'secondary') return e.tertiary + e.secondary;
+  if (level === 'tertiary') return e.tertiary;
+  return 1;
+}
+
+function pNotMarried(sex, aMin, aMax) {
+  const key = sex === 'men' ? 'menMarried' : 'womenMarried';
+  const popKey = sex === 'men' ? 'men' : 'women';
+  let marriedPop = 0, totalPop = 0;
+  for (const b of DATA.marital.byBand) {
+    const ov = Math.min(aMax, b.hi) - Math.max(aMin, b.lo) + 1;
+    if (ov <= 0) continue;
+    // waga = liczebność populacji w nakładającej się części pasma wieku
+    const w = popInRange(DATA.age.bands, Math.max(aMin, b.lo), Math.min(aMax, b.hi), popKey);
+    marriedPop += w * b[key];
+    totalPop += w;
+  }
+  const marriedRate = totalPop > 0 ? marriedPop / totalPop : 0;
+  return 1 - marriedRate;
+}
+
+function pNotObese(sex) {
+  return 1 - DATA.obesity[sex].obese;
+}
+
+function pHasLicence(sex) {
+  return DATA.licence[sex].has;
+}
+
+function pHasCar(sex) {
+  return DATA.car[sex].has;
+}
+
+// odsetek bezdzietnych w wybranym przedziale wieku (ważony liczebnością populacji)
+function pChildless(sex, aMin, aMax) {
+  const key = sex === 'men' ? 'menChildless' : 'womenChildless';
+  const popKey = sex === 'men' ? 'men' : 'women';
+  let childlessPop = 0, totalPop = 0;
+  for (const b of DATA.childless.byBand) {
+    const ov = Math.min(aMax, b.hi) - Math.max(aMin, b.lo) + 1;
+    if (ov <= 0) continue;
+    const w = popInRange(DATA.age.bands, Math.max(aMin, b.lo), Math.min(aMax, b.hi), popKey);
+    childlessPop += w * b[key];
+    totalPop += w;
+  }
+  return totalPop > 0 ? childlessPop / totalPop : 1;
+}
+
+// odsetek osób NIErozwiedzionych w wybranym przedziale wieku
+function pNotDivorced(sex, aMin, aMax) {
+  const key = sex === 'men' ? 'menDivorced' : 'womenDivorced';
+  const popKey = sex === 'men' ? 'men' : 'women';
+  let divPop = 0, totalPop = 0;
+  for (const b of DATA.divorce.byBand) {
+    const ov = Math.min(aMax, b.hi) - Math.max(aMin, b.lo) + 1;
+    if (ov <= 0) continue;
+    const w = popInRange(DATA.age.bands, Math.max(aMin, b.lo), Math.min(aMax, b.hi), popKey);
+    divPop += w * b[key];
+    totalPop += w;
+  }
+  const rate = totalPop > 0 ? divPop / totalPop : 0;
+  return 1 - rate;
+}
+
+/* ============================================================
+   STAN APLIKACJI
+   ============================================================ */
+const state = {
+  sex: 'men',
+  ageMin: 20,
+  ageMax: 40,
+  height: 180,
+  income: 8000,
+  edu: 'any',
+  excludeMarried: false,
+  excludeObese: false,
+  requireLicence: false,
+  requireCar: false,
+  excludeKids: false,
+  excludeDivorced: false
+};
+
+/* ============================================================
+   SLIDERY (custom, vanilla)
+   ============================================================ */
+function makeSlider(el, { values, fmt, onChange }) {
+  const min = +el.dataset.min, max = +el.dataset.max, step = +el.dataset.step;
+  const range = max - min;
+  const dual = values.length === 2;
+  el.innerHTML = '<div class="rail"></div><div class="fill"></div>' +
+    values.map((_, i) => `<div class="thumb" data-i="${i}"></div><div class="bubble" data-i="${i}"></div>`).join('');
+  const fill = el.querySelector('.fill');
+  const thumbs = [...el.querySelectorAll('.thumb')];
+  const bubbles = [...el.querySelectorAll('.bubble')];
+  let vals = values.slice();
+
+  function pctOf(v) { return (v - min) / range * 100; }
+
+  function render() {
+    thumbs.forEach((t, i) => { t.style.left = pctOf(vals[i]) + '%'; });
+    bubbles.forEach((b, i) => { b.style.left = pctOf(vals[i]) + '%'; b.textContent = fmt(vals[i]); });
+    if (dual) {
+      fill.style.left = pctOf(vals[0]) + '%';
+      fill.style.width = (pctOf(vals[1]) - pctOf(vals[0])) + '%';
+    } else {
+      fill.style.left = '0%';
+      fill.style.width = pctOf(vals[0]) + '%';
+    }
+  }
+
+  function valueFromEvent(clientX) {
+    const r = el.getBoundingClientRect();
+    let frac = (clientX - r.left) / r.width;
+    frac = Math.max(0, Math.min(1, frac));
+    let v = min + frac * range;
+    v = Math.round(v / step) * step;
+    return Math.max(min, Math.min(max, v));
+  }
+
+  let dragging = -1;
+  function down(e, i) {
+    dragging = i;
+    e.preventDefault();
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }
+  function move(e) {
+    if (dragging < 0) return;
+    let v = valueFromEvent(e.clientX);
+    if (dual) {
+      if (dragging === 0) v = Math.min(v, vals[1]);
+      else v = Math.max(v, vals[0]);
+    }
+    if (v !== vals[dragging]) { vals[dragging] = v; render(); onChange(vals.slice()); }
+  }
+  function up() {
+    dragging = -1;
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+  }
+
+  thumbs.forEach((t, i) => t.addEventListener('pointerdown', (e) => down(e, i)));
+  // klik na pasek -> przesuń najbliższy thumb
+  el.addEventListener('pointerdown', (e) => {
+    if (e.target.classList.contains('thumb')) return;
+    const v = valueFromEvent(e.clientX);
+    let i = 0;
+    if (dual) i = Math.abs(v - vals[0]) <= Math.abs(v - vals[1]) ? 0 : 1;
+    vals[i] = v;
+    if (dual) { if (i === 0) vals[0] = Math.min(vals[0], vals[1]); else vals[1] = Math.max(vals[1], vals[0]); }
+    render(); onChange(vals.slice());
+    down(e, i);
+  });
+
+  render();
+  return { set: (v) => { vals = v.slice(); render(); } };
+}
+
+/* ============================================================
+   FORMATERY
+   ============================================================ */
+const fmtAge = (v) => '' + v;
+const fmtHeight = (v) => v + ' cm';
+const fmtIncome = (v) => {
+  if (v === 0) return '0 zł';
+  if (v >= 1000) return (v / 1000).toLocaleString('pl-PL', { maximumFractionDigits: 1 }) + ' tys. zł';
+  return v + ' zł';
+};
+
+/* ============================================================
+   GŁÓWNE PRZELICZENIE + RENDER WYNIKU
+   ============================================================ */
+function compute() {
+  const s = state.sex;
+  const parts = [];
+  const pa = pAge(s, state.ageMin, state.ageMax);
+  parts.push({ key: 'age', label: `Wiek ${state.ageMin}–${state.ageMax} lat`, p: pa });
+
+  const ph = pHeightAtLeast(s, state.height);
+  parts.push({ key: 'height', label: `Wzrost ≥ ${state.height} cm`, p: ph });
+
+  let pi = 1;
+  if (state.income > 0) {
+    pi = pIncomeAtLeast(s, state.income);
+    parts.push({ key: 'income', label: `Zarobki ≥ ${fmtIncome(state.income)} brutto`, p: pi });
+  }
+
+  let pe = 1;
+  if (state.edu !== 'any') {
+    pe = pEducation(s, state.edu);
+    const lbl = state.edu === 'tertiary' ? 'Wykształcenie wyższe' : 'Wykształcenie min. średnie';
+    parts.push({ key: 'edu', label: lbl, p: pe });
+  }
+
+  let pm = 1;
+  if (state.excludeMarried) {
+    pm = pNotMarried(s, state.ageMin, state.ageMax);
+    parts.push({ key: 'married', label: s === 'men' ? 'Nieżonaty' : 'Niezamężna', p: pm });
+  }
+
+  let po = 1;
+  if (state.excludeObese) {
+    po = pNotObese(s);
+    parts.push({ key: 'obese', label: 'Bez otyłości', p: po });
+  }
+
+  let pl = 1;
+  if (state.requireLicence) {
+    pl = pHasLicence(s);
+    parts.push({ key: 'licence', label: 'Ma prawo jazdy', p: pl });
+  }
+
+  let pc = 1;
+  if (state.requireCar) {
+    pc = pHasCar(s);
+    parts.push({ key: 'car', label: 'Ma samochód', p: pc });
+  }
+
+  let pk = 1;
+  if (state.excludeKids) {
+    pk = pChildless(s, state.ageMin, state.ageMax);
+    parts.push({ key: 'kids', label: 'Bez dzieci', p: pk });
+  }
+
+  let pd = 1;
+  if (state.excludeDivorced) {
+    pd = pNotDivorced(s, state.ageMin, state.ageMax);
+    parts.push({ key: 'divorced', label: s === 'men' ? 'Nierozwiedziony' : 'Nierozwiedziona', p: pd });
+  }
+
+  const total = pa * ph * pi * pe * pm * po * pl * pc * pk * pd;
+  return { total, parts };
+}
+
+function verdictFor(p) {
+  const v = p * 100;
+  if (v >= 20) return { t: 'Twardo stąpasz po ziemi', c: 'var(--good)' };
+  if (v >= 8)  return { t: 'Realistyczne oczekiwania', c: 'var(--good)' };
+  if (v >= 3)  return { t: 'Wymagająco, ale możliwe', c: 'var(--ok)' };
+  if (v >= 1)  return { t: 'Wysoko mierzysz', c: 'var(--warn)' };
+  if (v >= 0.2) return { t: 'Urojenia na horyzoncie', c: 'var(--bad)' };
+  return { t: 'Pełnia urojeń 💀', c: 'var(--bad)' };
+}
+
+function oneInText(p) {
+  if (p <= 0) return 'praktycznie nikt nie spełnia tych kryteriów';
+  const n = Math.round(1 / p);
+  const noun = state.sex === 'men' ? 'mężczyzn' : 'kobiet';
+  if (n <= 1) return `prawie każdy spełnia te kryteria`;
+  return `to mniej więcej <b>1 na ${n.toLocaleString('pl-PL')}</b> ${noun} w Polsce`;
+}
+
+function render() {
+  const { total, parts } = compute();
+  document.getElementById('pct').textContent = fmtPct(total);
+  document.getElementById('oneIn').innerHTML = oneInText(total);
+
+  const vd = verdictFor(total);
+  const vEl = document.getElementById('verdict');
+  vEl.textContent = vd.t;
+  vEl.style.background = vd.c;
+  vEl.style.color = '#14202b';
+
+  // siatka 100
+  const grid = document.getElementById('grid');
+  const onCount = Math.max(total > 0 ? 1 : 0, Math.round(total * 100));
+  let html = '';
+  for (let i = 0; i < 100; i++) html += `<div class="d${i < onCount ? ' on' : ''}"></div>`;
+  grid.innerHTML = html;
+  document.getElementById('gridNote').textContent =
+    onCount <= 1 && total > 0
+      ? 'mniej niż 1 na 100 osób (zaokrąglone do 1 kropki)'
+      : `≈ ${onCount} na 100 dorosłych ${state.sex === 'men' ? 'mężczyzn' : 'kobiet'}`;
+
+  // breakdown — posortowany od najbardziej zawężających
+  const sorted = parts.slice().sort((a, b) => a.p - b.p);
+  document.getElementById('breakdown').innerHTML = sorted.map(p => `
+    <div class="brow">
+      <span class="lbl">${p.label}</span>
+      <span class="bar"><i style="width:${Math.max(2, p.p * 100).toFixed(1)}%"></i></span>
+      <span class="val">${fmtPct(p.p)}</span>
+    </div>`).join('');
+}
+
+/* ============================================================
+   INICJALIZACJA UI
+   ============================================================ */
+const ageS = makeSlider(document.getElementById('ageSlider'), {
+  values: [state.ageMin, state.ageMax], fmt: fmtAge,
+  onChange: (v) => { state.ageMin = v[0]; state.ageMax = v[1]; render(); }
+});
+const heightS = makeSlider(document.getElementById('heightSlider'), {
+  values: [state.height], fmt: fmtHeight,
+  onChange: (v) => { state.height = v[0]; render(); }
+});
+const incomeS = makeSlider(document.getElementById('incomeSlider'), {
+  values: [state.income], fmt: fmtIncome,
+  onChange: (v) => { state.income = v[0]; render(); }
+});
+
+// checkboxy
+function bindCheck(id, key) {
+  const el = document.getElementById(id);
+  el.addEventListener('click', () => {
+    state[key] = !state[key];
+    el.classList.toggle('on', state[key]);
+    render();
+  });
+}
+bindCheck('chkMarried', 'excludeMarried');
+bindCheck('chkObese', 'excludeObese');
+bindCheck('chkLicence', 'requireLicence');
+bindCheck('chkCar', 'requireCar');
+bindCheck('chkKids', 'excludeKids');
+bindCheck('chkDivorced', 'excludeDivorced');
+
+// radio wykształcenie
+document.querySelectorAll('#eduRadios .radio').forEach(r => {
+  r.addEventListener('click', () => {
+    document.querySelectorAll('#eduRadios .radio').forEach(x => x.classList.remove('on'));
+    r.classList.add('on');
+    state.edu = r.dataset.edu;
+    render();
+  });
+});
+
+// przełącznik płci
+document.querySelectorAll('#seg button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#seg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    state.sex = b.dataset.sex;
+    // dostosuj etykiety
+    document.querySelectorAll('[data-men][data-women]').forEach(el => {
+      el.textContent = el.dataset[state.sex];
+    });
+    // sensowny domyślny wzrost
+    if (state.sex === 'women' && state.height === 180) { state.height = 170; heightS.set([170]); }
+    if (state.sex === 'men' && state.height === 170) { state.height = 180; heightS.set([180]); }
+    render();
+  });
+});
+
+// źródła
+document.getElementById('sources').innerHTML =
+  '<h4>Źródła</h4><ul>' +
+  DATA.sources.map(s => `<li><a href="${s.u}" target="_blank" rel="noopener">${s.t}</a></li>`).join('') +
+  '</ul>';
+
+render();
+</script>
+</body>
+</html>
